@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+PKG_VERSION := $(shell dpkg-parsechangelog -S Version | sed 's/~.*//')
+PKG_SOURCE  := $(shell jq -r '.name' composer.json)
+
+%:
+	dh $@
+
+override_dh_auto_build:
+
+override_dh_auto_test:
+
+override_dh_install:
+	mkdir -p debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess
+	find . -maxdepth 1 -name '*.php' -exec cp {} debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess/ \;
+	for d in Exception; do \
+		if [ -d "$$d" ]; then \
+			cp -r "$$d" debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess/; \
+		fi; \
+	done
+	install -m 644 debian/autoload.php debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess/autoload.php
+	sed -i "s|'unknown'|'$(PKG_SOURCE)'|" debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess/autoload.php
+	sed -i "s|'0.0.0'|'$(PKG_VERSION)'|" debian/php-symfony-property-access/usr/share/php/Symfony/Component/PropertyAccess/autoload.php
